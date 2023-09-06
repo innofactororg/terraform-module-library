@@ -32,7 +32,7 @@ resource "azurerm_virtual_network_gateway_connection" "vngw_connection" {
 
   #Only one IP Sec Policy block per connection
   dynamic "ipsec_policy" {
-    for_each = try(var.settings.ipsec_policy, {})
+    for_each = var.settings.ipsec_policy != null ? [var.settings.ipsec_policy] : []
     content {
       dh_group         = ipsec_policy.value.dh_group               # DHGroup1, DHGroup14, DHGroup2, DHGroup2048, DHGroup24, ECP256, ECP384, or None
       ike_encryption   = ipsec_policy.value.ike_encryption         #AES128, AES192, AES256, DES, or DES3
