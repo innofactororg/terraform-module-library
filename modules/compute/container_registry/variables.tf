@@ -32,10 +32,41 @@ variable "georeplications" {
   default     = {}
 }
 
+variable "quarantine_policy_enabled" {
+  description = "(Optional) Specifies whether the quarantine policy is enabled. Defaults to false."
+  default     = false
+  type = bool
+}
+
+variable "trust_policy_enabled" {
+  description = "(Optional) Specifies the trust policy for the container registry. Defaults to false."
+  default     = false
+  type        = bool  
+}
+
+variable "retention_policy" {
+  description = "(Optional) value for the retention policy"
+  default     = {}
+}
 variable "vnets" {
   default = {}
 }
 
+variable "network_rule_bypass_option" {
+  description = "(optional) Specifies whether to allow trusted Azure services to access a network restricted registry. Possible values are AzureServices or None. Defaults to AzureServices."
+  default     = "AzureServices"
+  validation {
+    condition     = var.network_rule_bypass_option == "AzureServices" || var.network_rule_bypass_option == "None"
+    error_message = "network_rule_bypass_option must be AzureServices or None"
+  }
+  type = string
+}
+
+variable "data_endpoint_enabled" {
+  description = "(Optional) Specifies whether the data endpoint is enabled. Defaults to false."
+  default     = false
+  type = bool
+}
 variable "network_rule_set" {
   description = " (Optional) A network_rule_set block as documented https://www.terraform.io/docs/providers/azurerm/r/container_registry.html"
   default     = {}
@@ -63,6 +94,7 @@ variable "private_dns" {
 variable "public_network_access_enabled" {
   default = "true"
 }
+
 variable "location" {
   description = "location of the resource if different from the resource group."
   default     = null
