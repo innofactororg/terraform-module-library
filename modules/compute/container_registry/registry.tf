@@ -18,6 +18,10 @@ resource "azurerm_container_registry" "acr" {
 
   public_network_access_enabled = var.public_network_access_enabled
 
+  // set the data_endpoint_enabled to true if var.sku is "premium" otherwise do not set this
+  data_endpoint_enabled = var.data_endpoint_enabled
+
+  network_rule_bypass_option = var.network_rule_bypass_option
   dynamic "network_rule_set" {
     for_each = try(var.network_rule_set, {})
 
@@ -51,5 +55,20 @@ resource "azurerm_container_registry" "acr" {
       tags     = try(georeplications.value.tags)
     }
   }
+
+  quarantine_policy_enabled = var.quarantine_policy_enabled
+  # trust_policy = {
+  #   enabled = try(var.trust_policy_enabled, false)
+  # }
+
+  # dynamic "retention_policy" {
+  #   for_each = try(var.retention_policy, {})
+
+  #   content {
+  #     enabled = try(retention_policy.value.enabled, false)
+  #     days    = try(retention_policy.value.days, 0)
+  #   }
+  # }
+
 }
 
