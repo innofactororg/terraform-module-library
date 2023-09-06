@@ -2,15 +2,18 @@ module "sentinel_automation_rules" {
   source   = "./modules/security/sentinel/automation_rule"
   for_each = try(local.security.sentinel_automation_rules, {})
 
-  name                                = each.value.name
-  display_name                        = each.value.display_name
+  name                                = try(each.value.name, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["id"], yamldecode(file("${path.cwd}/${each.value.definition_file}"))["name"],each.value.name )
+  display_name                        = try(each.value.display_name, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["displayName"],each.value.name)
   settings                            = each.value
   log_analytics_workspace_id          = can(each.value.diagnostic_log_analytics_workspace) || can(each.value.log_analytics_workspace.id) ? try(local.combined_diagnostics.log_analytics[each.value.diagnostic_log_analytics_workspace.key].id, each.value.log_analytics_workspace.id) : local.combined_objects_log_analytics[try(each.value.log_analytics_workspace.lz_key, local.client_config.landingzone_key)][each.value.log_analytics_workspace.key].id
-  order                               = each.value.order
-  enabled                             = try(each.value.enabled, true)
-  expiration                          = try(each.value.expiration, null)
+  order                               = try(each.value.order, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["order"])
+  enabled                             = try(each.value.enabled, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["triggeringLogic"].isEnabled, true)
+  expiration                          = try(each.value.expiration, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["triggeringLogic"].expiration, null)
   combined_objects_logic_app_workflow = local.combined_objects_logic_app_workflow
   client_config                       = local.client_config
+  modify_properties                    = try(each.value.action_order, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["modifyProperties"], null)
+  run_playbook                    = try(each.value.action_order, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["runPlaybook"], null)
+  condition_type                      = try(each.value.condition_type, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["triggeringLogic"].conditions, null)
 }
 
 module "sentinel_watchlists" {
@@ -75,22 +78,24 @@ module "sentinel_ar_scheduled" {
   source   = "./modules/security/sentinel/ar_scheduled"
   for_each = try(local.security.sentinel_ar_scheduled, {})
 
-  name                       = each.value.name
-  display_name               = each.value.display_name
+  name                       = try(each.value.name, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["id"], yamldecode(file("${path.cwd}/${each.value.definition_file}"))["name"],each.value.name )
+  display_name = try(each.value.display_name, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["name"],each.value.name)
   settings                   = each.value
   log_analytics_workspace_id = can(each.value.diagnostic_log_analytics_workspace) || can(each.value.log_analytics_workspace.id) ? try(local.combined_diagnostics.log_analytics[each.value.diagnostic_log_analytics_workspace.key].id, each.value.log_analytics_workspace.id) : local.combined_objects_log_analytics[try(each.value.log_analytics_workspace.lz_key, local.client_config.landingzone_key)][each.value.log_analytics_workspace.key].id
-  severity                   = each.value.severity
-  query                      = each.value.query
+  severity = try(each.value.severity, try(yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["severity"], null ), "Informational")
+  query                      = try(each.value.query, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["query"])
   alert_rule_template_guid   = try(each.value.alert_rule_template_guid, null)
-  description                = try(each.value.description, null)
-  enabled                    = try(each.value.enabled, true)
-  query_frequency            = try(each.value.query_frequency, "PT5H")
-  query_period               = try(each.value.query_period, "PT5H")
-  suppression_duration       = try(each.value.suppression_duration, "PT5H")
-  suppression_enabled        = try(each.value.suppression_enabled, false)
-  tactics                    = try(each.value.tactics, null)
-  trigger_operator           = try(each.value.trigger_operator, null)
-  trigger_threshold          = try(each.value.trigger_threshold, null)
+  description                = try(each.value.description, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["description"], null)
+  enabled                    = try(each.value.enabled, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["enabled"], true)
+  query_frequency            = try(each.value.query_frequency, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["queryFrequency"], "PT5H")
+  query_period               = try(each.value.query_period, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["queryPeriod"], "PT5H")
+  suppression_duration       = try(each.value.suppression_duration, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["suppressionDuration"], "PT5H")
+  suppression_enabled        = try(each.value.suppression_enabled, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["suppressionEnabled"], false)
+  tactics                    = try(each.value.tactics, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["tactics"], null)
+  trigger_operator           = try(each.value.trigger_operator, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["triggerOperator"], null)
+  trigger_threshold          = try(each.value.trigger_threshold, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["triggerThreshold"], null)
+  display_name_format        = try(each.value.display_name_format, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["alertDetailsOverride"].alertDisplayNameFormat,null)
+  entity_mappings                = try(each.value.entityMappings, yamldecode(file("${path.cwd}/${each.value.definition_file}"))["properties"]["entityMappings"], null)
 }
 
 module "sentinel_dc_aad" {
