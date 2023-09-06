@@ -13,6 +13,10 @@ data "azurerm_billing_mca_account_scope" "sub" {
   invoice_section_name = var.settings.invoice_section_name
 }
 
+data "azurerm_subscription" "sub" {
+  subscription_id = try(var.settings.subscription_id, null) != null ? var.settings.subscription_id : null
+}
+
 resource "azurerm_subscription" "sub" {
   count = var.subscription_key != "logged_in_subscription" && lookup(var.settings, "create_alias", true) ? 1 : 0
 
@@ -31,19 +35,19 @@ resource "azurerm_subscription" "sub" {
 }
 
 
-resource "null_resource" "refresh_access_token" {
-  depends_on = [azurerm_subscription.sub]
+# resource "null_resource" "refresh_access_token" {
+#   depends_on = [azurerm_subscription.sub]
 
-  count = try(var.settings.subscription_id, null) == null && var.subscription_key != "logged_in_subscription" ? 1 : 0
+#   count = try(var.settings.subscription_id, null) == null && var.subscription_key != "logged_in_subscription" ? 1 : 0
 
-  triggers = {
-    subscription_id = azurerm_subscription.sub.0.subscription_id
-  }
+#   triggers = {
+#     subscription_id = azurerm_subscription.sub.0.subscription_id
+#   }
 
-  provisioner "local-exec" {
-    command     = format("%s/scripts/refresh_access_token.sh", path.module)
-    interpreter = ["/bin/bash"]
-    on_failure  = fail
-  }
+#   provisioner "local-exec" {
+#     command     = format("%s/scripts/refresh_access_token.sh", path.module)
+#     interpreter = ["/bin/bash"]
+#     on_failure  = fail
+#   }
 
-}
+# }
