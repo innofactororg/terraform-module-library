@@ -13,5 +13,13 @@ resource "azurecaf_name" "rg" {
 resource "azurerm_resource_group" "rg" {
   name     = azurecaf_name.rg.result
   location = var.global_settings.regions[lookup(var.settings, "region", var.global_settings.default_region)]
-  tags     = merge(local.tags, try(var.settings.tags, null))
+  tags     = merge(local.tags, try(var.tags, null))
+}
+
+resource "azurerm_management_lock" "rg" {
+  count      = try(var.settings.lock_resource, false) ? 1 : 0
+  name       = "${azurecaf_name.rg.result}-lock"
+  scope = azurerm_resource_group.rg.id
+  lock_level = "CanNotDelete"
+  notes      = "Please remove the lock before deleting this resource group."
 }
